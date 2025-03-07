@@ -7,6 +7,10 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
+    const linkage = b.option(std.builtin.LinkMode, "linkage", "Link mode") orelse .static;
+    const strip = b.option(bool, "strip", "Omit debug information");
+    const pic = b.option(bool, "pie", "Produce Position Independent Code");
+
     // Most of these config options have not been tested.
 
     const minimum = b.option(bool, "minimum", "build a minimally sized library (default=false)") orelse false;
@@ -203,55 +207,60 @@ pub fn build(b: *std.Build) void {
         config_header.addValues(.{ .XML_THREAD_LOCAL = ._Thread_local });
     }
 
-    const xml_lib = b.addStaticLibrary(.{
+    const xml_lib = b.addLibrary(.{
+        .linkage = linkage,
         .name = "xml",
-        .target = target,
-        .optimize = optimize,
         .version = version,
-        .link_libc = true,
+        .root_module = b.createModule(.{
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+            .strip = strip,
+            .pic = pic,
+        }),
     });
     b.installArtifact((xml_lib));
-    xml_lib.addConfigHeader(config_header);
-    xml_lib.addConfigHeader(xml_version_header);
+    xml_lib.root_module.addConfigHeader(config_header);
+    xml_lib.root_module.addConfigHeader(xml_version_header);
     xml_lib.installHeader(xml_version_header.getOutput(), "libxml/xmlversion.h");
-    xml_lib.addIncludePath(upstream.path("include"));
-    xml_lib.addCSourceFiles(.{ .files = xml_src, .root = upstream.path(""), .flags = xml_flags });
+    xml_lib.root_module.addIncludePath(upstream.path("include"));
+    xml_lib.root_module.addCSourceFiles(.{ .files = xml_src, .root = upstream.path(""), .flags = xml_flags });
     xml_lib.installHeadersDirectory(upstream.path("include/libxml"), "libxml", .{});
     if (target.result.os.tag != .windows) xml_lib.root_module.addCMacro("HAVE_PTHREAD_H", "1");
     if (target.result.os.tag == .windows) xml_lib.root_module.addCMacro("LIBXML_STATIC", "1");
-    if (c14n) xml_lib.addCSourceFile(.{ .file = upstream.path("c14n.c"), .flags = xml_flags });
-    if (catalog) xml_lib.addCSourceFile(.{ .file = upstream.path("catalog.c"), .flags = xml_flags });
-    if (debug) xml_lib.addCSourceFile(.{ .file = upstream.path("debugXML.c"), .flags = xml_flags });
-    if (ftp) xml_lib.addCSourceFile(.{ .file = upstream.path("nanoftp.c"), .flags = xml_flags });
-    if (html) xml_lib.addCSourceFiles(.{ .files = &.{ "HTMLparser.c", "HTMLtree.c" }, .root = upstream.path(""), .flags = xml_flags });
-    if (http) xml_lib.addCSourceFile(.{ .file = upstream.path("nanohttp.c"), .flags = xml_flags });
-    if (legacy) xml_lib.addCSourceFile(.{ .file = upstream.path("legacy.c"), .flags = xml_flags });
-    if (lzma) xml_lib.addCSourceFile(.{ .file = upstream.path("xzlib.c"), .flags = xml_flags });
-    // if (modules) xml_lib.addCSourceFile(.{ .file = upstream.path("xmlmodule.c"), .flags = xml_flags });
-    if (output) xml_lib.addCSourceFile(.{ .file = upstream.path("xmlsave.c"), .flags = xml_flags });
-    if (pattern) xml_lib.addCSourceFile(.{ .file = upstream.path("pattern.c"), .flags = xml_flags });
-    if (reader) xml_lib.addCSourceFile(.{ .file = upstream.path("xmlreader.c"), .flags = xml_flags });
-    if (regexps) xml_lib.addCSourceFiles(.{ .files = &.{ "xmlregexp.c", "xmlunicode.c" }, .root = upstream.path(""), .flags = xml_flags });
-    if (schemas) xml_lib.addCSourceFiles(.{ .files = &.{ "relaxng.c", "xmlschemas.c", "xmlschemastypes.c" }, .root = upstream.path(""), .flags = xml_flags });
-    if (schematron) xml_lib.addCSourceFile(.{ .file = upstream.path("schematron.c"), .flags = xml_flags });
-    if (writer) xml_lib.addCSourceFile(.{ .file = upstream.path("xmlwriter.c"), .flags = xml_flags });
-    if (xinclude) xml_lib.addCSourceFile(.{ .file = upstream.path("xinclude.c"), .flags = xml_flags });
-    if (xpath) xml_lib.addCSourceFile(.{ .file = upstream.path("xpath.c"), .flags = xml_flags });
-    if (xptr) xml_lib.addCSourceFiles(.{ .files = &.{ "xlink.c", "xpointer.c" }, .root = upstream.path(""), .flags = xml_flags });
+    if (c14n) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("c14n.c"), .flags = xml_flags });
+    if (catalog) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("catalog.c"), .flags = xml_flags });
+    if (debug) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("debugXML.c"), .flags = xml_flags });
+    if (ftp) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("nanoftp.c"), .flags = xml_flags });
+    if (html) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "HTMLparser.c", "HTMLtree.c" }, .root = upstream.path(""), .flags = xml_flags });
+    if (http) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("nanohttp.c"), .flags = xml_flags });
+    if (legacy) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("legacy.c"), .flags = xml_flags });
+    if (lzma) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xzlib.c"), .flags = xml_flags });
+    // if (modules) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xmlmodule.c"), .flags = xml_flags });
+    if (output) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xmlsave.c"), .flags = xml_flags });
+    if (pattern) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("pattern.c"), .flags = xml_flags });
+    if (reader) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xmlreader.c"), .flags = xml_flags });
+    if (regexps) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "xmlregexp.c", "xmlunicode.c" }, .root = upstream.path(""), .flags = xml_flags });
+    if (schemas) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "relaxng.c", "xmlschemas.c", "xmlschemastypes.c" }, .root = upstream.path(""), .flags = xml_flags });
+    if (schematron) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("schematron.c"), .flags = xml_flags });
+    if (writer) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xmlwriter.c"), .flags = xml_flags });
+    if (xinclude) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xinclude.c"), .flags = xml_flags });
+    if (xpath) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xpath.c"), .flags = xml_flags });
+    if (xptr) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "xlink.c", "xpointer.c" }, .root = upstream.path(""), .flags = xml_flags });
     if (readline) {
-        xml_lib.linkSystemLibrary("readline");
+        xml_lib.root_module.linkSystemLibrary("readline", .{});
         xml_lib.root_module.addCMacro("HAVE_LIBREADLINE", "1");
     }
     if (history) {
-        xml_lib.linkSystemLibrary("history");
+        xml_lib.root_module.linkSystemLibrary("history", .{});
         xml_lib.root_module.addCMacro("HAVE_LIBHISTORY", "1");
     }
-    if (zlib) xml_lib.linkSystemLibrary("zlib");
-    if (lzma) xml_lib.linkSystemLibrary("lzma");
-    if (icu) xml_lib.linkSystemLibrary("icu-i18n");
-    if (iconv) xml_lib.linkSystemLibrary("iconv");
-    if (target.result.os.tag == .windows) xml_lib.linkSystemLibrary("bcrypt");
-    if (http and target.result.os.tag == .windows) xml_lib.linkSystemLibrary("ws2_32");
+    if (zlib) xml_lib.root_module.linkSystemLibrary("zlib", .{});
+    if (lzma) xml_lib.root_module.linkSystemLibrary("lzma", .{});
+    if (icu) xml_lib.root_module.linkSystemLibrary("icu-i18n", .{});
+    if (iconv) xml_lib.root_module.linkSystemLibrary("iconv", .{});
+    if (target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("bcrypt", .{});
+    if (http and target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("ws2_32", .{});
 }
 
 pub const xml_src: []const []const u8 = &.{
