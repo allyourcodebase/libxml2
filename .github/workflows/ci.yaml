@@ -33,4 +33,4 @@ jobs:
         run: zig fmt --ast-check --check .
 
       - name: Build
-        run: zig build -Diconv=false --summary all
+        run: zig build --summary all

@@ -1,11 +1,16 @@
 .{
     .name = .libxml2,
-    .version = "2.13.5-1",
+    .version = "2.14.3",
     .minimum_zig_version = "0.14.0",
     .dependencies = .{
         .libxml2 = .{
-            .url = "git+https://gitlab.gnome.org/GNOME/libxml2.git?ref=v2.13.5#de918d45e1b2276a28a4cd32bcf556bef65284e4",
-            .hash = "N-V-__8AALhJnQFEyD-r67NUdrbzKo_FzIluLJQg1-mTCpuY",
+            .url = "git+https://gitlab.gnome.org/GNOME/libxml2.git?ref=v2.14.3#8d509f483dd5ce268b2fded9c738132c47d820d8",
+            .hash = "N-V-__8AAKECgwELybeTt28_dzxwziqdrHDrIiadVpfYeFbx",
+        },
+        .zlib = .{
+            .url = "git+https://github.com/allyourcodebase/zlib#6c72830882690c1eb2567a537525c3f432c1da50",
+            .hash = "zlib-1.3.1-ZZQ7lVgMAACwO4nUUd8GLhsuQ5JQq_VAhlEiENJTUv6h",
+            .lazy = true,
         },
     },
     .paths = .{

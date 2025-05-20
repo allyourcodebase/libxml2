@@ -20,7 +20,6 @@ You can then import `libxml2` in your `build.zig` with:
 const libxml2_dependency = b.dependency("libxml2", .{
     .target = target,
     .optimize = optimize,
-    .iconv = false, // This would link to `libiconv` otherwise
 });
 your_exe.linkLibrary(libxml2_dependency.artifact("libxml2"));
 ```
