@@ -193,7 +193,7 @@ pub fn build(b: *std.Build) void {
     if (history) xml_lib.root_module.linkSystemLibrary("history", .{});
     if (lzma) xml_lib.root_module.linkSystemLibrary("lzma", .{});
     if (icu) xml_lib.root_module.linkSystemLibrary("icu-i18n", .{});
-    // if (iconv) xml_lib.root_module.linkSystemLibrary("iconv", .{});
+    if (iconv and target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("iconv", .{});
     if (target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("bcrypt", .{});
     if (http and target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("ws2_32", .{});
 

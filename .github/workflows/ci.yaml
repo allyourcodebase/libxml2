@@ -33,4 +33,9 @@ jobs:
         run: zig fmt --ast-check --check .
 
       - name: Build
+        if: matrix.os != 'windows-latest'
         run: zig build --summary all
+
+      - name: Build (windows)
+        if: matrix.os == 'windows-latest'
+        run: zig build -Diconv=false --summary all
