@@ -21,5 +21,5 @@ const libxml2_dependency = b.dependency("libxml2", .{
     .target = target,
     .optimize = optimize,
 });
-your_exe.linkLibrary(libxml2_dependency.artifact("libxml2"));
+your_exe.linkLibrary(libxml2_dependency.artifact("xml"));
 ```
