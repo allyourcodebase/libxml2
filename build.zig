@@ -181,7 +181,7 @@ pub fn build(b: *std.Build) void {
     if (output) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xmlsave.c"), .flags = xml_flags });
     if (pattern) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("pattern.c"), .flags = xml_flags });
     if (reader) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xmlreader.c"), .flags = xml_flags });
-    if (regexps) xml_lib.root_module.addCSourceFiles(.{ .files = &.{"xmlregexp.c"}, .root = upstream.path(""), .flags = xml_flags });
+    if (regexps) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "xmlregexp.c", "xmlunicode.c" }, .root = upstream.path(""), .flags = xml_flags });
     if (relaxng) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("relaxng.c"), .flags = xml_flags });
     if (schemas) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "xmlschemas.c", "xmlschemastypes.c" }, .root = upstream.path(""), .flags = xml_flags });
     if (schematron) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("schematron.c"), .flags = xml_flags });
