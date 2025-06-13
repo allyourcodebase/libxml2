@@ -1,6 +1,6 @@
 .{
     .name = .libxml2,
-    .version = "2.14.3-1",
+    .version = "2.14.3-2",
     .minimum_zig_version = "0.14.0",
     .dependencies = .{
         .libxml2 = .{
