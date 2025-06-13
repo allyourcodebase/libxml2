@@ -193,9 +193,43 @@ pub fn build(b: *std.Build) void {
     if (history) xml_lib.root_module.linkSystemLibrary("history", .{});
     if (lzma) xml_lib.root_module.linkSystemLibrary("lzma", .{});
     if (icu) xml_lib.root_module.linkSystemLibrary("icu-i18n", .{});
-    if (iconv and target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("iconv", .{});
     if (target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("bcrypt", .{});
     if (http and target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("ws2_32", .{});
+
+    if (iconv) {
+        if (b.systemIntegrationOption("iconv", .{})) {
+            xml_lib.root_module.linkSystemLibrary("iconv", .{});
+        } else {
+            const IconvImpl = enum { libc, libiconv, win_iconv };
+            const impl: IconvImpl = b.option(
+                IconvImpl,
+                "iconv-impl",
+                "Set the iconv implementation (default=libc except for win_iconv on windows)",
+            ) orelse switch (target.result.os.tag) {
+                .windows => .win_iconv,
+                else => .libc,
+            };
+            switch (impl) {
+                .libc => {},
+                .libiconv => {
+                    if (b.lazyDependency("libiconv", .{
+                        .target = target,
+                        .optimize = optimize,
+                    })) |libiconv_dependency| {
+                        xml_lib.root_module.linkLibrary(libiconv_dependency.artifact("z"));
+                    }
+                },
+                .win_iconv => {
+                    if (b.lazyDependency("win_iconv", .{
+                        .target = target,
+                        .optimize = optimize,
+                    })) |win_iconv_dependency| {
+                        xml_lib.root_module.linkLibrary(win_iconv_dependency.artifact("iconv"));
+                    }
+                },
+            }
+        }
+    }
 
     if (zlib) {
         if (b.systemIntegrationOption("zlib", .{})) {
