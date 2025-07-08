@@ -216,7 +216,7 @@ pub fn build(b: *std.Build) void {
                         .target = target,
                         .optimize = optimize,
                     })) |libiconv_dependency| {
-                        xml_lib.root_module.linkLibrary(libiconv_dependency.artifact("z"));
+                        xml_lib.root_module.linkLibrary(libiconv_dependency.artifact("iconv"));
                     }
                 },
                 .win_iconv => {
