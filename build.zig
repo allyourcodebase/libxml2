@@ -84,7 +84,7 @@ pub fn build(b: *std.Build) void {
         .include_path = "libxml/xmlversion.h",
         .style = .{ .cmake = upstream.path("include/libxml/xmlversion.h.in") },
     }, .{
-        .VERSION = b.fmt("{}", .{version}),
+        .VERSION = b.fmt("{f}", .{version}),
         .LIBXML_VERSION_NUMBER = @as(i64, version.major * 10000 + version.major * 100 + version.patch),
         .LIBXML_VERSION_EXTRA = "",
         .WITH_THREADS = threads,
