@@ -51,15 +51,17 @@ pub fn build(b: *std.Build) void {
     const want_xpath = b.option(bool, "xpath", "XPath 1.0 support (default=true)");
     const want_xptr = b.option(bool, "xptr", "XPointer support (default=true)");
 
+    const tools = b.option(bool, "tools", "Build tools, enables (requires) readline and optionally history (default=false)") orelse false;
+
     const output = want_output orelse (!minimum or want_c14n == true or want_writer == true);
     const pattern = want_pattern orelse (!minimum or want_schemas == true or want_schematron == true);
     const regexps = want_regexps orelse (!minimum or want_relaxng == true or want_schemas == true);
     const push = want_push orelse (!minimum or want_reader == true or want_writer == true);
-    const readline = want_readline orelse (want_history == true);
+    const readline = want_readline orelse (tools or want_history == true);
     const xpath = want_xpath orelse (!minimum or want_c14n == true or want_schematron == true or want_xptr == true);
 
     const c14n = want_c14n orelse (!minimum and output and xpath);
-    const history = want_history orelse false;
+    const history = want_history orelse (tools or false);
     const reader = want_reader orelse (!minimum and push);
     const schemas = want_schemas orelse (!minimum and pattern and regexps);
     const relaxng = want_relaxng orelse (!minimum and schemas);
@@ -189,8 +191,6 @@ pub fn build(b: *std.Build) void {
     if (xinclude) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xinclude.c"), .flags = xml_flags });
     if (xpath) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xpath.c"), .flags = xml_flags });
     if (xptr) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "xlink.c", "xpointer.c" }, .root = upstream.path(""), .flags = xml_flags });
-    if (readline) xml_lib.root_module.linkSystemLibrary("readline", .{});
-    if (history) xml_lib.root_module.linkSystemLibrary("history", .{});
     if (lzma) xml_lib.root_module.linkSystemLibrary("lzma", .{});
     if (icu) xml_lib.root_module.linkSystemLibrary("icu-i18n", .{});
     if (target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("bcrypt", .{});
@@ -241,6 +241,49 @@ pub fn build(b: *std.Build) void {
             xml_lib.root_module.linkLibrary(zlib_dependency.artifact("z"));
         }
     }
+
+    // Build tools
+    if (tools and readline) {
+        const xmllint = b.addExecutable(.{
+            .name = "xmllint",
+            .root_module = b.createModule(.{
+                .target = target,
+                .optimize = optimize,
+                .link_libc = true,
+            }),
+        });
+        xmllint.linkLibrary(xml_lib);
+        xmllint.addCSourceFiles(.{
+            .files = &xmllint_src,
+            .flags = xml_flags,
+            .root = upstream.path("."),
+        });
+        xmllint.linkSystemLibrary2("readline", .{});
+        if (history) xmllint.linkSystemLibrary2("history", .{});
+        xmllint.root_module.addConfigHeader(config_header);
+        xmllint.root_module.addIncludePath(upstream.path("include"));
+
+        b.installArtifact(xmllint);
+
+        const xmlcatalog = b.addExecutable(.{
+            .name = "xmlcatalog",
+            .root_module = b.createModule(.{
+                .target = target,
+                .optimize = optimize,
+                .link_libc = true,
+            }),
+        });
+        xmlcatalog.linkLibrary(xml_lib);
+        xmlcatalog.addCSourceFile(.{
+            .file = upstream.path("xmlcatalog.c"),
+            .flags = xml_flags,
+        });
+        xmlcatalog.linkSystemLibrary2("readline", .{});
+        if (history) xmlcatalog.linkSystemLibrary2("history", .{});
+        xmlcatalog.root_module.addConfigHeader(config_header);
+
+        b.installArtifact(xmlcatalog);
+    }
 }
 
 pub const xml_src: []const []const u8 = &.{
@@ -263,6 +306,12 @@ pub const xml_src: []const []const u8 = &.{
     "xmlIO.c",
     "xmlmemory.c",
     "xmlstring.c",
+};
+
+const xmllint_src = [_][]const u8{
+    "xmllint.c",
+    "lintmain.c",
+    "shell.c",
 };
 
 pub const xml_flags: []const []const u8 = &.{

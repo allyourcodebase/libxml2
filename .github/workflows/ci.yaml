@@ -34,3 +34,11 @@ jobs:
 
       - name: Build
         run: zig build --summary all
+
+      - name: Set up readline for tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libreadline-dev
+
+      - name: Build (with tools)
+        run: zig build -Dtools --summary all
