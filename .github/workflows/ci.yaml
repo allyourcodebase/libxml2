@@ -35,6 +35,16 @@ jobs:
       - name: Build
         run: zig build --summary all
 
+  build_tools:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+
       - name: Set up readline for tools
         run: |
           sudo apt-get update
