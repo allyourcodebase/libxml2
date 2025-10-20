@@ -242,6 +242,8 @@ pub fn build(b: *std.Build) void {
         }
     }
 
+    if (tools and !readline) std.debug.panic("tools require readline", .{});
+
     // Build tools
     if (tools and readline) {
         const xmllint = b.addExecutable(.{
