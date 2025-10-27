@@ -121,7 +121,10 @@ pub fn build(b: *std.Build) void {
         .WITH_LZMA = lzma,
     });
 
-    const config_header = b.addConfigHeader(.{}, .{
+    const config_header = b.addConfigHeader(.{
+        .include_path = "config.h",
+        .style = .{ .cmake = upstream.path("config.h.cmake.in") },
+    }, .{
         .HAVE_DECL_GETENTROPY = switch (target.result.os.tag) {
             .linux => target.result.isGnuLibC() and target.result.os.version_range.linux.glibc.order(.{ .major = 2, .minor = 25, .patch = 0 }) != .lt,
             .freebsd, .openbsd => true,
@@ -129,30 +132,16 @@ pub fn build(b: *std.Build) void {
         },
         .HAVE_DECL_GLOB = target.result.os.tag != .windows,
         .HAVE_DECL_MMAP = target.result.os.tag != .windows and target.result.os.tag != .wasi,
-        .HAVE_DLFCN_H = target.result.os.tag != .windows,
         .HAVE_DLOPEN = false, // only present if `WITH_MODULES`
         .HAVE_FUNC_ATTRIBUTE_DESTRUCTOR = true,
-        .HAVE_INTTYPES_H = true,
         .HAVE_LIBHISTORY = history,
         .HAVE_LIBREADLINE = readline,
-        .HAVE_LZMA_H = lzma,
         .HAVE_POLL_H = http and target.result.os.tag != .windows,
-        .HAVE_PTHREAD_H = target.result.os.tag != .windows,
         .HAVE_SHLLOAD = false, // only present if `WITH_MODULES`
         .HAVE_STDINT_H = true,
-        .HAVE_STDIO_H = target.result.os.tag != .wasi,
-        .HAVE_STDLIB_H = target.result.os.tag != .wasi,
-        .HAVE_STRINGS_H = target.result.os.tag != .wasi,
-        .HAVE_STRING_H = target.result.os.tag != .wasi,
-        .HAVE_SYS_STAT_H = true,
-        .HAVE_SYS_TYPES_H = target.result.os.tag != .wasi,
-        .HAVE_UNISTD_H = target.result.os.tag != .wasi,
-        .HAVE_ZLIB_H = zlib,
-        .XML_SYSCONFDIR = if (catalog) "" else null, // TODO
+        .XML_SYSCONFDIR = "/", // TODO
+        .XML_THREAD_LOCAL = @as(?enum { _Thread_local }, if (tls) ._Thread_local else null),
     });
-    if (tls) {
-        config_header.addValues(.{ .XML_THREAD_LOCAL = ._Thread_local });
-    }
 
     const xml_lib = b.addLibrary(.{
         .linkage = linkage,
