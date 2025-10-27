@@ -41,7 +41,7 @@ pub fn build(b: *std.Build) void {
 
     const want_c14n = b.option(bool, "c14n", "Canonical XML 1.0 support (default=true)");
     const want_history = b.option(bool, "history", "history support for xmllint shell (default=false)");
-    const want_readline = b.option(bool, "readline", "use readline in DIR for shell (default=false)");
+    const want_readline = b.option(bool, "readline", "readline support for xmllint shell (default=false)");
     const want_output = b.option(bool, "output", "serialization support (default=true)");
     const want_pattern = b.option(bool, "pattern", "xmlPattern selection interface (default=true)");
     const want_push = b.option(bool, "push", "push parser interfaces (default=true)");
@@ -181,8 +181,6 @@ pub fn build(b: *std.Build) void {
     if (xinclude) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xinclude.c"), .flags = xml_flags });
     if (xpath) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xpath.c"), .flags = xml_flags });
     if (xptr) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "xlink.c", "xpointer.c" }, .root = upstream.path(""), .flags = xml_flags });
-    if (readline) xml_lib.root_module.linkSystemLibrary("readline", .{});
-    if (history) xml_lib.root_module.linkSystemLibrary("history", .{});
     if (lzma) xml_lib.root_module.linkSystemLibrary("lzma", .{});
     if (icu) xml_lib.root_module.linkSystemLibrary("icu-i18n", .{});
     if (target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("bcrypt", .{});
