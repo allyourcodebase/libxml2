@@ -231,9 +231,55 @@ pub fn build(b: *std.Build) void {
             xml_lib.root_module.linkLibrary(zlib_dependency.artifact("z"));
         }
     }
+
+    const xmllint = b.addExecutable(.{
+        .name = "xmllint",
+        .root_module = b.createModule(.{
+            .target = target,
+            .optimize = optimize,
+            .link_libc = true,
+            .strip = strip,
+            .pic = pic,
+        }),
+    });
+    b.installArtifact(xmllint);
+    xmllint.root_module.addCSourceFiles(.{
+        .files = xmllint_src,
+        .root = upstream.path("."),
+        .flags = xml_flags,
+    });
+    xmllint.root_module.linkLibrary(xml_lib);
+    xmllint.root_module.addConfigHeader(config_header);
+    xmllint.root_module.addIncludePath(upstream.path("include"));
+    if (target.result.os.tag == .windows and linkage == .static) xmllint.root_module.addCMacro("LIBXML_STATIC", "1");
+    if (readline) xmllint.root_module.linkSystemLibrary("readline", .{});
+    if (history) xmllint.root_module.linkSystemLibrary("history", .{});
+
+    if (catalog and output) {
+        const xmlcatalog = b.addExecutable(.{
+            .name = "xmlcatalog",
+            .root_module = b.createModule(.{
+                .target = target,
+                .optimize = optimize,
+                .link_libc = true,
+                .strip = strip,
+                .pic = pic,
+            }),
+        });
+        b.installArtifact(xmlcatalog);
+        xmlcatalog.root_module.addCSourceFile(.{
+            .file = upstream.path("xmlcatalog.c"),
+            .flags = xml_flags,
+        });
+        xmlcatalog.root_module.linkLibrary(xml_lib);
+        xmlcatalog.root_module.addConfigHeader(config_header);
+        if (target.result.os.tag == .windows and linkage == .static) xmlcatalog.root_module.addCMacro("LIBXML_STATIC", "1");
+        if (readline) xmlcatalog.root_module.linkSystemLibrary("readline", .{});
+        if (history) xmlcatalog.root_module.linkSystemLibrary("history", .{});
+    }
 }
 
-pub const xml_src: []const []const u8 = &.{
+const xml_src: []const []const u8 = &.{
     "buf.c",
     "chvalid.c",
     "dict.c",
@@ -255,7 +301,13 @@ pub const xml_src: []const []const u8 = &.{
     "xmlstring.c",
 };
 
-pub const xml_flags: []const []const u8 = &.{
+const xmllint_src: []const []const u8 = &.{
+    "xmllint.c",
+    "shell.c",
+    "lintmain.c",
+};
+
+const xml_flags: []const []const u8 = &.{
     "-pedantic",
     "-Wall",
     "-Wextra",
