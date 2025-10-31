@@ -187,7 +187,7 @@ pub fn build(b: *std.Build) void {
     if (http and target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("ws2_32", .{});
 
     if (iconv) {
-        if (b.systemIntegrationOption("iconv", .{})) {
+        if (b.systemIntegrationOption("iconv", .{ .default = target.result.os.tag.isDarwin() })) {
             xml_lib.root_module.linkSystemLibrary("iconv", .{});
         } else {
             const IconvImpl = enum { libc, libiconv, win_iconv };
