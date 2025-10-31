@@ -4,8 +4,8 @@
     .minimum_zig_version = "0.15.1",
     .dependencies = .{
         .libxml2 = .{
-            .url = "git+https://gitlab.gnome.org/GNOME/libxml2.git?ref=v2.14.3#8d509f483dd5ce268b2fded9c738132c47d820d8",
-            .hash = "N-V-__8AAKECgwELybeTt28_dzxwziqdrHDrIiadVpfYeFbx",
+            .url = "https://download.gnome.org/sources/libxml2/2.14/libxml2-2.14.3.tar.xz",
+            .hash = "N-V-__8AAHNpnQFu4N1SnEmxr9g4O873Ejt8qA3Ar7VOZ3MM",
         },
         .zlib = .{
             .url = "git+https://github.com/allyourcodebase/zlib.git#61e7df7e996ec5a5f13a653db3c419adb340d6ef",
