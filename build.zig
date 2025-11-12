@@ -19,9 +19,8 @@ pub fn build(b: *std.Build) void {
     const minimum = b.option(bool, "minimum", "build a minimally sized library (default=false)") orelse false;
     const legacy = b.option(bool, "legacy", "maximum ABI compatibility (default=false)") orelse false;
 
-    const http = b.option(bool, "http", "HTTP support (default=false)") orelse false;
+    const http = b.option(bool, "http", "ABI compatibility for removed HTTP support (default=false)") orelse false;
     const icu = b.option(bool, "icu", "ICU support (default=false)") orelse false;
-    const lzma = b.option(bool, "lzma", "use liblzma in DIR (default=false)") orelse false;
     // const python = b.option(bool, "python", "Python bindings (default=false)") orelse false;
     const thread_alloc = b.option(bool, "thread-alloc", "per-thread malloc hooks (default=false)") orelse false;
     const tls = b.option(bool, "tls", "thread-local storage (default=false)") orelse false;
@@ -49,7 +48,7 @@ pub fn build(b: *std.Build) void {
     const want_regexps = b.option(bool, "regexps", "regular expressions support (default=true)");
     const want_relaxng = b.option(bool, "relaxng", "RELAX NG support (default=true)");
     const want_schemas = b.option(bool, "schemas", "XML Schemas 1.0 and RELAX NG support (default=true)");
-    const want_schematron = b.option(bool, "schematron", "Schematron support (default=true)");
+    const want_schematron = b.option(bool, "schematron", "Schematron support (default=false)");
     const want_writer = b.option(bool, "writer", "xmlWriter serialization interface (default=true)");
     const want_xpath = b.option(bool, "xpath", "XPath 1.0 support (default=true)");
     const want_xptr = b.option(bool, "xptr", "XPointer support (default=true)");
@@ -118,7 +117,6 @@ pub fn build(b: *std.Build) void {
         .WITH_MODULES = false,
         .MODULE_EXTENSION = null,
         .WITH_ZLIB = zlib,
-        .WITH_LZMA = lzma,
     });
 
     const config_header = b.addConfigHeader(.{
@@ -136,7 +134,6 @@ pub fn build(b: *std.Build) void {
         .HAVE_FUNC_ATTRIBUTE_DESTRUCTOR = true,
         .HAVE_LIBHISTORY = history,
         .HAVE_LIBREADLINE = readline,
-        .HAVE_POLL_H = http and target.result.os.tag != .windows,
         .HAVE_SHLLOAD = false, // only present if `WITH_MODULES`
         .HAVE_STDINT_H = true,
         .XML_SYSCONFDIR = "/", // TODO
@@ -168,12 +165,11 @@ pub fn build(b: *std.Build) void {
     if (debug) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("debugXML.c"), .flags = xml_flags });
     if (html) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "HTMLparser.c", "HTMLtree.c" }, .root = upstream.path(""), .flags = xml_flags });
     if (http) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("nanohttp.c"), .flags = xml_flags });
-    if (lzma) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xzlib.c"), .flags = xml_flags });
     // if (modules) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xmlmodule.c"), .flags = xml_flags });
     if (output) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xmlsave.c"), .flags = xml_flags });
     if (pattern) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("pattern.c"), .flags = xml_flags });
     if (reader) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xmlreader.c"), .flags = xml_flags });
-    if (regexps) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "xmlregexp.c", "xmlunicode.c" }, .root = upstream.path(""), .flags = xml_flags });
+    if (regexps) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xmlregexp.c"), .flags = xml_flags });
     if (relaxng) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("relaxng.c"), .flags = xml_flags });
     if (schemas) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "xmlschemas.c", "xmlschemastypes.c" }, .root = upstream.path(""), .flags = xml_flags });
     if (schematron) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("schematron.c"), .flags = xml_flags });
@@ -181,10 +177,8 @@ pub fn build(b: *std.Build) void {
     if (xinclude) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xinclude.c"), .flags = xml_flags });
     if (xpath) xml_lib.root_module.addCSourceFile(.{ .file = upstream.path("xpath.c"), .flags = xml_flags });
     if (xptr) xml_lib.root_module.addCSourceFiles(.{ .files = &.{ "xlink.c", "xpointer.c" }, .root = upstream.path(""), .flags = xml_flags });
-    if (lzma) xml_lib.root_module.linkSystemLibrary("lzma", .{});
     if (icu) xml_lib.root_module.linkSystemLibrary("icu-i18n", .{});
     if (target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("bcrypt", .{});
-    if (http and target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("ws2_32", .{});
 
     if (iconv) {
         if (b.systemIntegrationOption("iconv", .{ .default = target.result.os.tag.isDarwin() })) {

@@ -1,11 +1,11 @@
 .{
     .name = .libxml2,
-    .version = "2.14.3-4",
+    .version = "2.15.1",
     .minimum_zig_version = "0.15.1",
     .dependencies = .{
         .libxml2 = .{
-            .url = "https://download.gnome.org/sources/libxml2/2.14/libxml2-2.14.3.tar.xz",
-            .hash = "N-V-__8AAHNpnQFu4N1SnEmxr9g4O873Ejt8qA3Ar7VOZ3MM",
+            .url = "https://download.gnome.org/sources/libxml2/2.15/libxml2-2.15.1.tar.xz",
+            .hash = "N-V-__8AAPCbSwEcttmGC8VZFtoJxaP06X_upd7O13NMUkIf",
         },
         .zlib = .{
             .url = "git+https://github.com/allyourcodebase/zlib.git#61e7df7e996ec5a5f13a653db3c419adb340d6ef",
