@@ -8,8 +8,8 @@
             .hash = "N-V-__8AAPCbSwEcttmGC8VZFtoJxaP06X_upd7O13NMUkIf",
         },
         .zlib = .{
-            .url = "git+https://github.com/allyourcodebase/zlib.git#61e7df7e996ec5a5f13a653db3c419adb340d6ef",
-            .hash = "zlib-1.3.1-ZZQ7lbYMAAB1hTSOKSXAKAgHsfDcyWNH_37ojw5WSpgR",
+            .url = "git+https://github.com/allyourcodebase/zlib.git#c5115f4b69ef660f72a835c6638f80508ef284c7",
+            .hash = "zlib-1.3.1-1-ZZQ7ldENAAA7qJjUXP6E6xnRuV-jDL9dyoJFc_eb3zQ6",
             .lazy = true,
         },
         .libiconv = .{
@@ -18,8 +18,8 @@
             .lazy = true,
         },
         .win_iconv = .{
-            .url = "git+https://github.com/allyourcodebase/win-iconv.git#497c381e41437856527b7a00b66e75af3f1f7dcc",
-            .hash = "win_iconv-0.0.10--19NP7MRAAD3CC0z2Jp2YTy649Q724cYYaR9uL7v7NCh",
+            .url = "git+https://github.com/allyourcodebase/win-iconv.git#341e958b33f1cd1142f00a561510d83e6556f1fd",
+            .hash = "win_iconv-0.0.10--19NP7MRAAAnmImNeW9llGV-UPmCHV-4MN_FVzNhb-P0",
             .lazy = true,
         },
     },
