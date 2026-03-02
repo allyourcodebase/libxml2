@@ -35,7 +35,7 @@ const libxml2_dependency = b.dependency("libxml2", .{
     // .iconv = !(target.query.isNativeOs() and target.result.os.tag.isDarwin()),
 
     // Use GNU libiconv on macOS which is licensed under LGPL.
-    // .@"iconv-impl" = if (target.result.os.tag.isDarwin()) else null,
+    // .@"iconv-impl" = @as(?enum{libc, libiconv, win_iconv}, if (target.result.os.tag.isDarwin()) .libiconv else null),
 });
 your_exe.linkLibrary(libxml2_dependency.artifact("xml"));
 ```

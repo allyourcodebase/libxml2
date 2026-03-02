@@ -1,5 +1,7 @@
 const std = @import("std");
 
+pub const IconvImpl = enum { libc, libiconv, win_iconv };
+
 pub fn build(b: *std.Build) void {
     const upstream = b.dependency("libxml2", .{});
     const target = b.standardTargetOptions(.{});
@@ -184,7 +186,6 @@ pub fn build(b: *std.Build) void {
         if (b.systemIntegrationOption("iconv", .{ .default = target.result.os.tag.isDarwin() })) {
             xml_lib.root_module.linkSystemLibrary("iconv", .{});
         } else {
-            const IconvImpl = enum { libc, libiconv, win_iconv };
             const impl: IconvImpl = b.option(
                 IconvImpl,
                 "iconv-impl",
