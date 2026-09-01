@@ -1,16 +1,12 @@
 const std = @import("std");
 
+const version = std.SemanticVersion.parse(@import("./build.zig.zon").version) catch unreachable;
 pub const IconvImpl = enum { libc, libiconv, win_iconv };
 
 pub fn build(b: *std.Build) void {
     const upstream = b.dependency("libxml2", .{});
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-
-    // get version from zon file
-    const versionString = @import("./build.zig.zon").version;
-    const version = std.SemanticVersion.parse(versionString) catch @panic("OOM");
-    const versionNumber = version.major * 1_00_00 + version.minor * 1_00 + version.patch;
 
     const linkage = b.option(std.builtin.LinkMode, "linkage", "Link mode") orelse .static;
     const strip = b.option(bool, "strip", "Omit debug information");
@@ -87,8 +83,8 @@ pub fn build(b: *std.Build) void {
         .include_path = "libxml/xmlversion.h",
         .style = .{ .cmake = upstream.path("include/libxml/xmlversion.h.in") },
     }, .{
-        .VERSION = b.fmt("{f}", .{std.SemanticVersion{ .major = version.major, .minor = version.minor, .patch = version.patch }}),
-        .LIBXML_VERSION_NUMBER = @as(i64, @intCast(versionNumber)),
+        .VERSION = b.fmt("{f}", .{version}),
+        .LIBXML_VERSION_NUMBER = @as(i64, @intCast(version.major * 1_00_00 + version.minor * 1_00 + version.patch)),
         .LIBXML_VERSION_EXTRA = "",
         .WITH_THREADS = threads,
         .WITH_THREAD_ALLOC = thread_alloc,
