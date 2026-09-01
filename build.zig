@@ -121,7 +121,10 @@ pub fn build(b: *std.Build) void {
     }, .{
         .HAVE_DECL_GETENTROPY = switch (target.result.os.tag) {
             .linux => target.result.isGnuLibC() and target.result.os.version_range.linux.glibc.order(.{ .major = 2, .minor = 25, .patch = 0 }) != .lt,
-            .freebsd, .openbsd => true,
+            .freebsd => target.result.os.isAtLeast(.freebsd, .{ .major = 12, .minor = 0, .patch = 0 }) orelse false,
+            .dragonfly => target.result.os.isAtLeast(.dragonfly, .{ .major = 6, .minor = 1, .patch = 0 }) orelse false,
+            .openbsd => false, // has `getentropy` but no `sys/random.h` header
+            .netbsd => target.result.os.isAtLeast(.netbsd, .{ .major = 10, .minor = 0, .patch = 0 }) orelse false,
             else => target.result.os.tag.isDarwin(),
         },
         .HAVE_DECL_GLOB = target.result.os.tag != .windows,
