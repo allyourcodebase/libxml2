@@ -241,19 +241,10 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
         });
-        t.addIncludePath(upstream.path("include"));
-        t.addConfigHeader(xml_version_header);
-        t.addConfigHeader(config_header);
+        t.linkLibrary(xml_lib);
 
-        const xml_module = b.addModule("xml", .{
-            .root_source_file = b.path("src/root.zig"),
-            .target = target,
-            .optimize = optimize,
-            .imports = &.{
-                .{ .name = "c", .module = t.mod },
-            },
-        });
-        xml_module.linkLibrary(xml_lib);
+        // https://codeberg.org/ziglang/zig/pulls/36531
+        b.modules.put(b.allocator, "xml", t.mod) catch @panic("OOM");
     }
 
     const xmllint = b.addExecutable(.{
