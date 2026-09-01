@@ -1,5 +1,4 @@
 const std = @import("std");
-const Translator = @import("translate_c").Translator;
 
 pub const IconvImpl = enum { libc, libiconv, win_iconv };
 
@@ -7,8 +6,6 @@ pub fn build(b: *std.Build) void {
     const upstream = b.dependency("libxml2", .{});
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
-
-    const translate_c = b.dependency("translate_c", .{});
 
     // get version from zon file
     const versionString = @import("./build.zig.zon").version;
@@ -228,33 +225,40 @@ pub fn build(b: *std.Build) void {
         }
     }
 
-    const t: Translator = .init(translate_c, .{
-        // libxml2 is modular, and the TranslateC step assumes there is a single
-        // header for everything, so we'll make our own. There is a minimal
-        // libxml.h header, but it just seems to be some common stuff, like the
-        // version of the library.
-        //
-        // The fact that you need to include the right header _and_ set an
-        // *_ENABLED defined is an interesting design decision. libxml2.h
-        // shouldn't collide with any of the other headers, and we retain the
-        // modularity with all the options passed in as macros.
-        .c_source_file = b.path("include/libxml2.h"),
-        .target = target,
-        .optimize = optimize,
-    });
-    t.addIncludePath(upstream.path("include"));
-    t.addConfigHeader(xml_version_header);
-    t.addConfigHeader(config_header);
+    const minimum_zig_version = comptime std.SemanticVersion.parse(@import("build.zig.zon").minimum_zig_version) catch unreachable;
+    comptime std.debug.assert(minimum_zig_version.order(.{ .major = 0, .minor = 17, .patch = 0 }) == .lt); // time to remove this extra check below
+    if (@import("builtin").zig_version.minor > 16) blk: {
+        const translate_c_dep = b.lazyDependency("translate_c", .{}) orelse break :blk;
+        const translate_c = b.lazyImport(@This(), "translate_c") orelse break :blk;
 
-    const xml_module = b.addModule("xml", .{
-        .root_source_file = b.path("src/root.zig"),
-        .target = target,
-        .optimize = optimize,
-        .imports = &.{
-            .{ .name = "c", .module = t.mod },
-        },
-    });
-    xml_module.linkLibrary(xml_lib);
+        const t: translate_c.Translator = .init(translate_c_dep, .{
+            // libxml2 is modular, and the TranslateC step assumes there is a single
+            // header for everything, so we'll make our own. There is a minimal
+            // libxml.h header, but it just seems to be some common stuff, like the
+            // version of the library.
+            //
+            // The fact that you need to include the right header _and_ set an
+            // *_ENABLED defined is an interesting design decision. libxml2.h
+            // shouldn't collide with any of the other headers, and we retain the
+            // modularity with all the options passed in as macros.
+            .c_source_file = b.path("include/libxml2.h"),
+            .target = target,
+            .optimize = optimize,
+        });
+        t.addIncludePath(upstream.path("include"));
+        t.addConfigHeader(xml_version_header);
+        t.addConfigHeader(config_header);
+
+        const xml_module = b.addModule("xml", .{
+            .root_source_file = b.path("src/root.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "c", .module = t.mod },
+            },
+        });
+        xml_module.linkLibrary(xml_lib);
+    }
 
     const xmllint = b.addExecutable(.{
         .name = "xmllint",
