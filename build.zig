@@ -184,36 +184,32 @@ pub fn build(b: *std.Build) void {
     if (target.result.os.tag == .windows) xml_lib.root_module.linkSystemLibrary("bcrypt", .{});
 
     if (iconv) {
-        if (b.systemIntegrationOption("iconv", .{ .default = target.result.os.tag.isDarwin() })) {
-            xml_lib.root_module.linkSystemLibrary("iconv", .{});
-        } else {
-            const impl: IconvImpl = b.option(
-                IconvImpl,
-                "iconv-impl",
-                "Set the iconv implementation (default=libc except for win_iconv on windows)",
-            ) orelse switch (target.result.os.tag) {
-                .windows => .win_iconv,
-                else => .libc,
-            };
-            switch (impl) {
-                .libc => {},
-                .libiconv => {
-                    if (b.lazyDependency("libiconv", .{
-                        .target = target,
-                        .optimize = optimize,
-                    })) |libiconv_dependency| {
-                        xml_lib.root_module.linkLibrary(libiconv_dependency.artifact("iconv"));
-                    }
-                },
-                .win_iconv => {
-                    if (b.lazyDependency("win_iconv", .{
-                        .target = target,
-                        .optimize = optimize,
-                    })) |win_iconv_dependency| {
-                        xml_lib.root_module.linkLibrary(win_iconv_dependency.artifact("iconv"));
-                    }
-                },
-            }
+        const impl: IconvImpl = b.option(
+            IconvImpl,
+            "iconv-impl",
+            "Set the iconv implementation (default=libc except for win_iconv on windows)",
+        ) orelse switch (target.result.os.tag) {
+            .windows => .win_iconv,
+            else => .libc,
+        };
+        switch (impl) {
+            .libc => {},
+            .libiconv => {
+                if (b.lazyDependency("libiconv", .{
+                    .target = target,
+                    .optimize = optimize,
+                })) |libiconv_dependency| {
+                    xml_lib.root_module.linkLibrary(libiconv_dependency.artifact("iconv"));
+                }
+            },
+            .win_iconv => {
+                if (b.lazyDependency("win_iconv", .{
+                    .target = target,
+                    .optimize = optimize,
+                })) |win_iconv_dependency| {
+                    xml_lib.root_module.linkLibrary(win_iconv_dependency.artifact("iconv"));
+                }
+            },
         }
     }
 
