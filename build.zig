@@ -224,32 +224,6 @@ pub fn build(b: *std.Build) void {
         }
     }
 
-    const minimum_zig_version = comptime std.SemanticVersion.parse(@import("build.zig.zon").minimum_zig_version) catch unreachable;
-    comptime std.debug.assert(minimum_zig_version.order(.{ .major = 0, .minor = 17, .patch = 0 }) == .lt); // time to remove this extra check below
-    if (@import("builtin").zig_version.minor > 16) blk: {
-        const translate_c_dep = b.lazyDependency("translate_c", .{}) orelse break :blk;
-        const translate_c = b.lazyImport(@This(), "translate_c") orelse break :blk;
-
-        const t: translate_c.Translator = .init(translate_c_dep, .{
-            // libxml2 is modular, and the TranslateC step assumes there is a single
-            // header for everything, so we'll make our own. There is a minimal
-            // libxml.h header, but it just seems to be some common stuff, like the
-            // version of the library.
-            //
-            // The fact that you need to include the right header _and_ set an
-            // *_ENABLED defined is an interesting design decision. libxml2.h
-            // shouldn't collide with any of the other headers, and we retain the
-            // modularity with all the options passed in as macros.
-            .c_source_file = b.path("include/libxml2.h"),
-            .target = target,
-            .optimize = optimize,
-        });
-        t.linkLibrary(xml_lib);
-
-        // https://codeberg.org/ziglang/zig/pulls/36531
-        b.modules.put(b.allocator, "xml", t.mod) catch @panic("OOM");
-    }
-
     const xmllint = b.addExecutable(.{
         .name = "xmllint",
         .root_module = b.createModule(.{
